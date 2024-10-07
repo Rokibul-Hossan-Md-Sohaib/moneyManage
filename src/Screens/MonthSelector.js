@@ -4,6 +4,8 @@ import { ExpenseContext } from '../Context/ExpenseContext';
 import { Picker } from '@react-native-picker/picker';
 
 const MonthSelector = () => {
+
+  
   const { setIncome, addExpense, getIncome, getMonthlyExpenses, calculateRemainingBalance } = useContext(ExpenseContext);
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [income, setIncomeInput] = useState('');

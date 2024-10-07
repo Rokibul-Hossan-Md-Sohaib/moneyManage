@@ -1,26 +1,23 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ExpenseProvider } from './src/Context/ExpenseContext';
-import Home from './src/Screens/Home';
-import MonthSelector from './src/Screens/MonthSelector';
-import YearlyOverview from './src/Screens/Yearly';
+import HomeScreen from './src/Screens/HomeScreen';
+import MonthlyScreen from './src/Screens/MonthlyScreen';
+import YearlyScreen from './src/Screens/YearlyScreen';
 
 
 const Stack = createNativeStackNavigator();
 
-function App() {
+const App = () => {
   return (
-    <ExpenseProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="MonthSelector" component={MonthSelector} options={{ title: 'Select Month & Add Expense' }} />
-          <Stack.Screen name="YearlyOverview" component={YearlyOverview} options={{ title: 'Yearly Overview' }} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ExpenseProvider>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Monthly" component={MonthlyScreen} />
+        <Stack.Screen name="Yearly" component={YearlyScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
 export default App;
