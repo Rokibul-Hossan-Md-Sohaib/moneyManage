@@ -1,93 +1,118 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { loadMonthlyData, saveMonthlyData } from '../utils/storage'; // Adjust the import path if necessary
+import CustomButton from '../Components/CustomButton';
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('default', { month: 'long', year: 'numeric' }));
-  const [income, setIncome] = useState('');
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [monthlyData, setMonthlyData] = useState({});
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await loadMonthlyData();
-      setMonthlyData(data);
+    const navigation = useNavigation();
+    const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('default', { month: 'long', year: 'numeric' }));
+    const [income, setIncome] = useState('');
+    const [description, setDescription] = useState('');
+    const [amount, setAmount] = useState('');
+    const [monthlyData, setMonthlyData] = useState({});
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        const data = await loadMonthlyData();
+        setMonthlyData(data);
+      };
+      fetchData();
+    }, []);
+  
+    const handleIncomeSave = () => {
+      const existingIncome = monthlyData[selectedMonth]?.income || 0;
+  
+      // Check if income is already set, alert user for confirmation
+      if (existingIncome > 0) {
+        Alert.alert(
+          'Income Already Set',
+          `Your current income for ${selectedMonth} is $${existingIncome.toFixed(2)}. Do you want to add the new income to this amount?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'OK', onPress: () => saveIncome(true) }, // Sum the income
+          ]
+        );
+      } else {
+        saveIncome(false); // First time setting income
+      }
     };
-    fetchData();
-  }, []);
-
-  const saveIncome = async () => {
-    if (!income) {
-      alert('Please enter your income');
-      return;
-    }
-
-    const monthData = { income: parseFloat(income), expenses: [] };
-    const updatedData = { ...monthlyData, [selectedMonth]: monthData };
-    setMonthlyData(updatedData);
-    await saveMonthlyData(updatedData);
-    setIncome('');
-  };
-
-  const saveExpense = async () => {
-    if (!description || !amount) {
-      alert('Please enter both description and amount');
-      return;
-    }
-
-    const newExpense = {
-      id: Date.now().toString(),
-      description,
-      amount: parseFloat(amount),
-      date: new Date().toLocaleDateString(),
+  
+    const saveIncome = async (addToExisting) => {
+      const currentIncome = monthlyData[selectedMonth]?.income || 0;
+      const newIncome = addToExisting ? currentIncome + parseFloat(income) : parseFloat(income);
+  
+      const monthData = { income: newIncome, expenses: monthlyData[selectedMonth]?.expenses || [] };
+      const updatedData = { ...monthlyData, [selectedMonth]: monthData };
+      setMonthlyData(updatedData);
+      await saveMonthlyData(updatedData);
+      setIncome('');
     };
-
-    const monthExpenses = monthlyData[selectedMonth]?.expenses || [];
-    monthExpenses.push(newExpense);
-
-    const updatedData = {
-      ...monthlyData,
-      [selectedMonth]: {
-        ...monthlyData[selectedMonth],
-        expenses: monthExpenses,
-      },
+  
+    const saveExpense = async () => {
+      if (!description || !amount) {
+        alert('Please enter both description and amount');
+        return;
+      }
+  
+      const newExpense = {
+        id: Date.now().toString(),
+        description,
+        amount: parseFloat(amount),
+        date: new Date().toLocaleDateString(),
+      };
+  
+      const monthExpenses = monthlyData[selectedMonth]?.expenses || [];
+      monthExpenses.push(newExpense);
+  
+      const updatedData = {
+        ...monthlyData,
+        [selectedMonth]: {
+          ...monthlyData[selectedMonth],
+          expenses: monthExpenses,
+        },
+      };
+  
+      setMonthlyData(updatedData);
+      await saveMonthlyData(updatedData);
+      setDescription('');
+      setAmount('');
     };
-
-    setMonthlyData(updatedData);
-    await saveMonthlyData(updatedData);
-    setDescription('');
-    setAmount('');
-  };
-
-  const deleteExpense = async (id) => {
-    const monthExpenses = monthlyData[selectedMonth]?.expenses || [];
-    const updatedExpenses = monthExpenses.filter(expense => expense.id !== id);
-
-    const updatedData = {
-      ...monthlyData,
-      [selectedMonth]: {
-        ...monthlyData[selectedMonth],
-        expenses: updatedExpenses,
-      },
+  
+    const deleteExpense = async (id) => {
+      const monthExpenses = monthlyData[selectedMonth]?.expenses || [];
+      const updatedExpenses = monthExpenses.filter(expense => expense.id !== id);
+  
+      const updatedData = {
+        ...monthlyData,
+        [selectedMonth]: {
+          ...monthlyData[selectedMonth],
+          expenses: updatedExpenses,
+        },
+      };
+  
+      setMonthlyData(updatedData);
+      await saveMonthlyData(updatedData);
     };
-
-    setMonthlyData(updatedData);
-    await saveMonthlyData(updatedData);
-  };
-
-  const getTotalExpenses = () => {
-    return (monthlyData[selectedMonth]?.expenses || []).reduce((total, expense) => total + expense.amount, 0).toFixed(2);
-  };
-
-  const getRemainingBalance = () => {
-    const incomeValue = monthlyData[selectedMonth]?.income || 0;
-    const expenseValue = getTotalExpenses();
-    return (incomeValue - expenseValue).toFixed(2);
-  };
+  
+    const getTotalExpenses = () => {
+      return (monthlyData[selectedMonth]?.expenses || []).reduce((total, expense) => total + expense.amount, 0).toFixed(2);
+    };
+  
+    const getRemainingBalance = () => {
+      const incomeValue = monthlyData[selectedMonth]?.income || 0;
+      const expenseValue = getTotalExpenses();
+      return (incomeValue - expenseValue).toFixed(2);
+    };
+  
+    const navigateToMonthlyScreen = () => {
+      navigation.navigate('Monthly'); // Assuming you have a MonthlyScreen in the navigator
+    };
+  
+    const navigateToYearlyScreen = () => {
+      navigation.navigate('Yearly'); // Assuming you have a YearlyScreen in the navigator
+    };
 
   return (
     <View style={styles.container}>
@@ -114,7 +139,7 @@ const HomeScreen = () => {
         onChangeText={setIncome}
         style={styles.input}
       />
-      <Button title="Save Income" onPress={saveIncome} />
+      <Button title="Save Income" onPress={handleIncomeSave} />
 
       <Text style={styles.subtitle}>Add your daily expense</Text>
       <TextInput
@@ -156,12 +181,20 @@ const HomeScreen = () => {
       />
 
       <View style={styles.navigationButtons}>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Monthly')}>
-          <Text style={styles.navButtonText}>Monthly Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Yearly')}>
-          <Text style={styles.navButtonText}>Yearly Report</Text>
-        </TouchableOpacity>
+       
+ <CustomButton
+        title="Monthly Expenses"
+        onPress={navigateToMonthlyScreen}
+        backgroundColor=""
+        textColor="black" 
+      />
+
+<CustomButton
+        title="Yearly Expenses"
+        onPress={navigateToYearlyScreen}
+        backgroundColor=""
+        textColor="black" 
+      />
       </View>
     </View>
   );
