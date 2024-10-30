@@ -1,5 +1,8 @@
 buildscript {
     ext {
+        
+         googlePlayServicesVersion = "+"// default: "+"
+    firebaseMessagingVersion = "21.1.0"// default: "21.1.0"
         buildToolsVersion = "34.0.0"
         minSdkVersion = 23
         compileSdkVersion = 34
@@ -12,6 +15,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+     classpath 'com.google.gms:google-services:4.4.0'
+        classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
